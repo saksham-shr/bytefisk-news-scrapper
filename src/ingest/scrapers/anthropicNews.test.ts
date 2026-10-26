@@ -22,9 +22,20 @@ test("parseAnthropicNewsHtml throws when nothing matches", () => {
 
 test("parseAnthropicReleaseNotesHtml turns each heading into an item with the following paragraph as summary", () => {
   const items = parseAnthropicReleaseNotesHtml(fixture("anthropic-release-notes-sample.html"), "anthropic-news");
-  assert.equal(items.length, 3);
+  assert.equal(items.length, 5);
   assert.equal(items[0].title, "October 26, 2026");
   assert.equal(items[0].url, "https://docs.anthropic.com/en/release-notes/overview#2026-10-26");
   assert.match(items[0].summary, /widget API/);
   assert.equal(items[2].summary, "");
+});
+
+test("parseAnthropicReleaseNotesHtml gives headings without an id distinct guids instead of colliding on the bare page URL", () => {
+  const items = parseAnthropicReleaseNotesHtml(fixture("anthropic-release-notes-sample.html"), "anthropic-news");
+  const untitledA = items.find((item) => item.title === "Untitled release A");
+  const untitledB = items.find((item) => item.title === "Untitled release B");
+  assert.ok(untitledA);
+  assert.ok(untitledB);
+  assert.notEqual(untitledA?.guid, untitledB?.guid, "distinct headings must not collide on the same dedupe key");
+  const guids = items.map((item) => item.guid);
+  assert.equal(guids.length, new Set(guids).size, "every item must have a unique guid");
 });

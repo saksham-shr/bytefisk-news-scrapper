@@ -9,7 +9,7 @@
     "build": "tsc && mkdir -p dist/db && cp src/db/schema.sql dist/db/schema.sql",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test",
+    "test": "node scripts/run-tests.mjs",
     "poll:news:once": "tsx src/cli/poll-news-once.ts",
     "poll:news": "tsx src/cli/poll-news.ts",
     "poll:scrape:once": "tsx src/cli/poll-scrape-once.ts",

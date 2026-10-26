@@ -43,18 +43,22 @@ export function parseAnthropicNewsHtml(html: string, sourceId: string): RawItem[
 /**
  * The release-notes page is a single long doc with one heading per
  * release rather than per-release links, so each `h2`/`h3` in the main
- * content becomes its own item, linked back to the page plus the
- * heading's `id` as an anchor when one is present.
+ * content becomes its own item, linked back to the page plus an anchor.
+ * The anchor prefers the heading's own `id`, but falls back to its
+ * position in the page (not a constant) when there's no `id` — every
+ * heading needs a *distinct* guid, since pipeline.ts treats guid as the
+ * permanent dedupe key: two headings colliding on the same guid would
+ * mean only the first one ever gets queued, forever.
  */
 export function parseAnthropicReleaseNotesHtml(html: string, sourceId: string): RawItem[] {
   const $ = cheerio.load(html);
   const items: RawItem[] = [];
 
-  $("h2, h3").each((_, el) => {
+  $("h2, h3").each((index, el) => {
     const title = $(el).text().trim();
     if (!title) return;
-    const id = $(el).attr("id");
-    const url = id ? `${RELEASE_NOTES_URL}#${id}` : RELEASE_NOTES_URL;
+    const anchor = $(el).attr("id") ?? `heading-${index}`;
+    const url = `${RELEASE_NOTES_URL}#${anchor}`;
     const summary = $(el).nextUntil("h2, h3", "p").first().text().trim();
     items.push({ sourceId, url, guid: url, title, summary, publishedAt: null });
   });

@@ -12,7 +12,11 @@ const FETCH_TIMEOUT_MS = 15_000;
  * of 2026-10-26 — throws rather than returning [] if nothing matches, so
  * selector drift is loud, not a silent empty poll.
  */
-const ARTICLE_LINK_PATTERN = /\/news\/20\d{2}\/\d{1,2}\/[^/]+\/?$/;
+// Anchored at both ends and matched against the resolved URL's *pathname*
+// (not the raw href) so a tracking/redirect link whose query string merely
+// ends in something shaped like this can't sneak through, and relative vs.
+// absolute hrefs are treated identically.
+const ARTICLE_PATH_PATTERN = /^\/news\/20\d{2}\/\d{1,2}\/[^/]+\/?$/;
 
 export function parseMetaNewsroomHtml(html: string, sourceId: string): RawItem[] {
   const $ = cheerio.load(html);
@@ -21,8 +25,17 @@ export function parseMetaNewsroomHtml(html: string, sourceId: string): RawItem[]
 
   $("a[href]").each((_, el) => {
     const href = $(el).attr("href");
-    if (!href || !ARTICLE_LINK_PATTERN.test(href)) return;
-    const url = new URL(href, NEWSROOM_URL).toString();
+    if (!href) return;
+
+    let resolved: URL;
+    try {
+      resolved = new URL(href, NEWSROOM_URL);
+    } catch {
+      return;
+    }
+    if (!ARTICLE_PATH_PATTERN.test(resolved.pathname)) return;
+
+    const url = resolved.toString();
     if (seen.has(url)) return;
 
     const title = $(el).text().trim();
