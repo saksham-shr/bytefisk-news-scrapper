@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Sample Atom Feed</title>
+  <link href="https://example.com/atom" />
+  <id>https://example.com/atom</id>
+  <updated>2026-10-26T09:00:00Z</updated>
+  <entry>
+    <title>arXiv paper: Coding agents that plan</title>
+    <link href="https://arxiv.org/abs/2026.00001v2" />
+    <id>https://arxiv.org/abs/2026.00001</id>
+    <updated>2026-10-26T07:00:00Z</updated>
+    <summary>Abstract text about planning coding agents.</summary>
+  </entry>
+  <entry>
+    <title>Entry with no id and no link</title>
+    <updated>2026-10-26T06:30:00Z</updated>
+    <summary>Should be skipped, not enqueued with an empty guid.</summary>
+  </entry>
+</feed>
