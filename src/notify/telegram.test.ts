@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createServer, type Server } from "node:http";
 import { test } from "node:test";
-import { sendTelegramMessage, sendTelegramMessages } from "./telegram.js";
+import { sendTelegramMessage } from "./telegram.js";
 
 type RequestLog = Array<{ body: unknown }>;
 
@@ -87,19 +87,6 @@ test("sendTelegramMessage throws with Telegram's own description on a non-429 er
     () => ({ status: 400, body: { ok: false, description: "chat not found" } }),
     async () => {
       await assert.rejects(() => sendTelegramMessage("hello"), /chat not found/);
-    },
-  );
-});
-
-test("sendTelegramMessages sends every chunk in order", async () => {
-  await withMockTelegram(
-    () => ({ status: 200, body: { ok: true } }),
-    async (log) => {
-      await sendTelegramMessages(["first", "second", "third"], 0);
-      assert.deepEqual(
-        log.map((entry) => (entry.body as Record<string, unknown>).text),
-        ["first", "second", "third"],
-      );
     },
   );
 });

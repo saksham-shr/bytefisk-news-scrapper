@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { PendingQueueRow } from "../db/index.js";
-import { buildDigestMessages, TELEGRAM_MESSAGE_LIMIT } from "./format.js";
+import { buildDigestChunks, buildDigestMessages, TELEGRAM_MESSAGE_LIMIT } from "./format.js";
 
 function row(overrides: Partial<PendingQueueRow>): PendingQueueRow {
   return {
@@ -45,6 +45,21 @@ test("buildDigestMessages escapes HTML in titles so a title can't break the mark
   assert.match(messages[0], /&amp; co/);
 });
 
+test("buildDigestMessages escapes a quote in the URL so it can't break out of the href attribute (regression)", () => {
+  const rows = [row({ id: "a", url: 'https://example.com/article?x="><script>alert(1)</script>' })];
+  const messages = buildDigestMessages(rows);
+  assert.ok(!messages[0].includes('"><script>'), "a raw quote in the URL must not break out of href=\"...\"");
+  assert.match(messages[0], /href="https:\/\/example\.com\/article\?x=&quot;&gt;&lt;script&gt;/);
+});
+
+test("buildDigestMessages truncates an extremely long title so one row can't blow out a whole chunk (regression)", () => {
+  const hugeTitle = "x".repeat(10_000);
+  const rows = [row({ id: "a", title: hugeTitle })];
+  const messages = buildDigestMessages(rows);
+  assert.equal(messages.length, 1);
+  assert.ok(messages[0].length < TELEGRAM_MESSAGE_LIMIT, `expected a bounded message, got ${messages[0].length} chars`);
+});
+
 test("buildDigestMessages falls back to the row's collection when payload JSON can't be parsed", () => {
   const rows = [row({ id: "a", payload: "not json" })];
   const messages = buildDigestMessages(rows);
@@ -64,5 +79,24 @@ test("buildDigestMessages splits into multiple messages rather than exceeding Te
   for (let i = 0; i < 200; i++) {
     const occurrences = messages.filter((m) => m.includes(`item number ${i} `)).length;
     assert.equal(occurrences, 1, `item ${i} should appear in exactly one chunk`);
+  }
+});
+
+test("buildDigestChunks tags each chunk with exactly the row ids whose lines landed in it", () => {
+  const rows = Array.from({ length: 200 }, (_, i) =>
+    row({ id: `item-${i}`, title: `A reasonably long headline about item number ${i} with some extra padding text` }),
+  );
+  const chunks = buildDigestChunks(rows);
+  assert.ok(chunks.length > 1, "expected more than one chunk for a large batch");
+
+  const allRowIds = chunks.flatMap((c) => c.rowIds);
+  assert.equal(allRowIds.length, 200, "every row must be tagged to exactly one chunk");
+  assert.equal(new Set(allRowIds).size, 200, "no row id should be tagged to more than one chunk");
+
+  for (const chunk of chunks) {
+    for (const id of chunk.rowIds) {
+      const index = Number(id.replace("item-", ""));
+      assert.ok(chunk.text.includes(`item number ${index} `), `chunk claims row ${id} but doesn't contain its line`);
+    }
   }
 });

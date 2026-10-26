@@ -101,6 +101,66 @@ test("sendPendingDigest leaves rows in 'written' (not notified) if the send fail
   cleanup();
 });
 
+test("sendPendingDigest marks only the successfully-sent chunk's rows notified, leaving a later failed chunk's rows queued (regression: no duplicate re-send of already-delivered chunks)", async () => {
+  const { cleanup } = useFreshDb();
+
+  // Enough rows to force more than one chunk (see format.test.ts's identical sizing).
+  const ids = Array.from({ length: 200 }, (_, i) => {
+    const id = itemId(`https://example.com/item-${i}`);
+    markSeen({ id, sourceId: "yourstory", url: `https://example.com/item-${i}`, title: `item-${i}` });
+    enqueuePending({
+      id,
+      sourceId: "yourstory",
+      url: `https://example.com/item-${i}`,
+      title: `A reasonably long headline about item number ${i} with some extra padding text`,
+      collection: "news",
+      payload: { category: "Industry" },
+    });
+    updatePendingStatus(id, "written");
+    return id;
+  });
+
+  let requestCount = 0;
+  const server: Server = createServer((req, res) => {
+    req.on("data", () => {});
+    req.on("end", () => {
+      requestCount += 1;
+      const ok = requestCount === 1; // first chunk succeeds, every later one fails
+      res.writeHead(ok ? 200 : 400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(ok ? { ok: true } : { ok: false, description: "simulated failure" }));
+    });
+  });
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const address = server.address();
+  if (!address || typeof address === "string") throw new Error("expected a TCP address");
+  process.env.TELEGRAM_API_BASE_URL = `http://127.0.0.1:${address.port}`;
+  process.env.TELEGRAM_BOT_TOKEN = "test-token";
+  process.env.TELEGRAM_CHAT_ID = "12345";
+
+  try {
+    const result = await sendPendingDigest(0);
+    assert.ok(result.error, "expected the second chunk to fail");
+    assert.equal(result.messageCount, 1, "only the first chunk should count as sent");
+
+    const stillWritten = getItemsByStatus("written");
+    const nowNotified = getItemsByStatus("notified");
+
+    assert.ok(stillWritten.length > 0, "the failed chunk's rows must stay queued");
+    assert.ok(nowNotified.length > 0, "the successfully-sent chunk's rows must be marked notified");
+    assert.equal(
+      stillWritten.length + nowNotified.length,
+      ids.length,
+      "every row must be accounted for exactly once between written and notified",
+    );
+  } finally {
+    delete process.env.TELEGRAM_API_BASE_URL;
+    delete process.env.TELEGRAM_BOT_TOKEN;
+    delete process.env.TELEGRAM_CHAT_ID;
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+    cleanup();
+  }
+});
+
 test("sendPendingDigest does nothing when there are no written items", async () => {
   const { cleanup } = useFreshDb();
   process.env.TELEGRAM_BOT_TOKEN = "test-token";

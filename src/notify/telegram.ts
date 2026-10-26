@@ -1,5 +1,4 @@
 import { env } from "../config/env.js";
-import { telegramLimits } from "../config/notification.js";
 
 const FETCH_TIMEOUT_MS = 15_000;
 const MAX_RETRIES = 3;
@@ -63,21 +62,4 @@ export async function sendTelegramMessage(text: string): Promise<void> {
   // TypeScript can see every path returns/throws without a non-null
   // assertion, since it can't prove a for-loop is exhaustive on its own.
   throw new Error("Telegram sendMessage failed: exhausted retries after repeated 429s");
-}
-
-/**
- * Send several message chunks in order. Paced at the more conservative
- * of TECH_NEWS_SOURCE_MAP.md §13's two steady-state limits (20/min for a
- * group chat, vs. 1/sec for a private chat) since we don't know which
- * kind of chat TELEGRAM_CHAT_ID points at. In the common case this is
- * exactly one message and the pacing never applies.
- */
-export async function sendTelegramMessages(
-  chunks: string[],
-  pacingMs: number = Math.ceil(60_000 / telegramLimits.maxMessagesPerMinuteGroup),
-): Promise<void> {
-  for (let i = 0; i < chunks.length; i++) {
-    if (i > 0) await sleep(pacingMs);
-    await sendTelegramMessage(chunks[i]);
-  }
 }
