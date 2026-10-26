@@ -1,17 +1,10 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 import { test } from "node:test";
+import { useFreshDb } from "../testing/freshDb.js";
+import { enqueuePending, getDb, hasSeen, itemId, markSeen } from "./index.js";
 
-test("dedupe store: markSeen + hasSeen + enqueuePending round trip", async () => {
-  const dir = mkdtempSync(join(tmpdir(), "bytefisk-db-test-"));
-  process.env.DB_PATH = join(dir, "test.sqlite");
-
-  // Fresh import so env.ts picks up DB_PATH set just above.
-  const { itemId, hasSeen, markSeen, enqueuePending, getDb } = await import(
-    `./index.js?t=${Date.now()}`
-  );
+test("dedupe store: markSeen + hasSeen + enqueuePending round trip", () => {
+  const { cleanup } = useFreshDb();
 
   const id = itemId("https://example.com/some-article");
   assert.equal(hasSeen(id), false);
@@ -35,5 +28,5 @@ test("dedupe store: markSeen + hasSeen + enqueuePending round trip", async () =>
   assert.equal(row?.collection, "news");
   assert.equal(row?.status, "pending");
 
-  rmSync(dir, { recursive: true, force: true });
+  cleanup();
 });

@@ -13,7 +13,8 @@
     "poll:news:once": "tsx src/cli/poll-news-once.ts",
     "poll:news": "tsx src/cli/poll-news.ts",
     "poll:scrape:once": "tsx src/cli/poll-scrape-once.ts",
-    "poll:scrape": "tsx src/cli/poll-scrape.ts"
+    "poll:scrape": "tsx src/cli/poll-scrape.ts",
+    "write:mdx": "tsx src/cli/write-mdx-once.ts"
   },
   "repository": {
     "type": "git",
