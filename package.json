@@ -1,0 +1,37 @@
+{
+  "name": "bytefisk-news-scrapper",
+  "version": "0.1.0",
+  "description": "24/7 ingestion service that polls verified tech-news sources, dedupes items, and writes MDX files for the Bytefisk site repo.",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc && mkdir -p dist/db && cp src/db/schema.sql dist/db/schema.sql",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saksham-shr/bytefisk-news-scrapper.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/saksham-shr/bytefisk-news-scrapper/issues"
+  },
+  "homepage": "https://github.com/saksham-shr/bytefisk-news-scrapper#readme",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "dotenv": "^18.0.9"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
