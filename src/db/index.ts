@@ -67,6 +67,44 @@ export function enqueuePending(item: PendingQueueInput): void {
     );
 }
 
+export interface PendingQueueRow {
+  id: string;
+  source_id: string;
+  url: string;
+  title: string | null;
+  payload: string;
+  collection: "news" | "events";
+  status: "pending" | "written" | "notified" | "failed";
+  error: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Pending items for a collection (or every collection), oldest first. */
+export function getPendingItems(collection?: "news" | "events"): PendingQueueRow[] {
+  const db = getDb();
+  if (collection) {
+    return db
+      .prepare("SELECT * FROM pending_queue WHERE status = 'pending' AND collection = ? ORDER BY created_at ASC")
+      .all(collection) as PendingQueueRow[];
+  }
+  return db
+    .prepare("SELECT * FROM pending_queue WHERE status = 'pending' ORDER BY created_at ASC")
+    .all() as PendingQueueRow[];
+}
+
+export function updatePendingStatus(
+  id: string,
+  status: "written" | "notified" | "failed",
+  error?: string,
+): void {
+  getDb()
+    .prepare(
+      "UPDATE pending_queue SET status = ?, error = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE id = ?",
+    )
+    .run(status, error ?? null, id);
+}
+
 export function closeDb(): void {
   db?.close();
   db = null;
