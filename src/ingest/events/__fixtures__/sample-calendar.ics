@@ -1,0 +1,27 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Luma//Community Meetups//EN
+BEGIN:VEVENT
+UID:event-1@luma.com
+SUMMARY:Bengaluru AI Builders Meetup
+DESCRIPTION:Monthly meetup for AI builders.\nBring your laptop!
+LOCATION:WeWork Koramangala\, Bengaluru
+DTSTART:20261101T130000Z
+DTEND:20261101T150000Z
+URL:https://luma.com/events/bengaluru-ai-builders
+END:VEVENT
+BEGIN:VEVENT
+UID:event-2@luma.com
+SUMMARY:Virtual Workshop: Intro to MCP
+DESCRIPTION:A hands-on workshop over Zoom.
+LOCATION:
+DTSTART:20261105T093000Z
+DTEND:20261105T113000Z
+END:VEVENT
+BEGIN:VEVENT
+UID:event-3@luma.com
+SUMMARY:
+DESCRIPTION:An event with no title should be skipped.
+DTSTART:20261110T090000Z
+END:VEVENT
+END:VCALENDAR

@@ -14,6 +14,8 @@
     "poll:news": "tsx src/cli/poll-news.ts",
     "poll:scrape:once": "tsx src/cli/poll-scrape-once.ts",
     "poll:scrape": "tsx src/cli/poll-scrape.ts",
+    "poll:events:once": "tsx src/cli/poll-events-once.ts",
+    "poll:events": "tsx src/cli/poll-events.ts",
     "write:mdx": "tsx src/cli/write-mdx-once.ts",
     "notify": "tsx src/cli/notify-once.ts"
   },

@@ -1,4 +1,6 @@
 import type { Source } from "../config/sources.js";
+import { fetchLumaEvents } from "./events/luma.js";
+import { fetchPunetechEvents } from "./events/punetech.js";
 import { fetchFeeds } from "./feedParser.js";
 import { fetchGithubReleases } from "./githubReleases.js";
 import { fetchHnAlgolia } from "./hnAlgolia.js";
@@ -12,7 +14,7 @@ import type { RawItem } from "./types.js";
  * Per-source fetch dispatch. Most `rss`/`atom` sources share the generic
  * feed fetcher; a few `api` sources (and the templated releases watch-list)
  * need their own request/response shape, as do the three scrape-fallback
- * sources named in CLAUDE.md step 3.
+ * sources named in CLAUDE.md step 3 and the two events sources in step 6.
  */
 export async function fetchItemsForSource(source: Source): Promise<RawItem[]> {
   switch (source.id) {
@@ -28,6 +30,10 @@ export async function fetchItemsForSource(source: Source): Promise<RawItem[]> {
       return fetchAnthropicNews(source.id);
     case "meta-newsroom":
       return fetchMetaNewsroom(source.id);
+    case "luma-community-meetups":
+      return fetchLumaEvents(source.id);
+    case "punetech-events":
+      return fetchPunetechEvents(source.id);
     default:
       break;
   }
