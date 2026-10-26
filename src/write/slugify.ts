@@ -12,7 +12,11 @@ export function slugify(title: string, dedupeId: string): string {
     .replace(/[̀-ͯ]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
-    .slice(0, 80);
+    .slice(0, 80)
+    // slice() can cut mid dash-run (e.g. land right after a "-" that was
+    // followed by more content), so re-trim a trailing dash it reintroduces
+    // — otherwise the "-" + dedupeId suffix below produces "foo--abcd1234".
+    .replace(/-+$/, "");
   const suffix = dedupeId.slice(0, 8);
   return base ? `${base}-${suffix}` : suffix;
 }

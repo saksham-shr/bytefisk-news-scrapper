@@ -21,6 +21,34 @@ test("renderNewsMdx produces valid frontmatter and a summary + attribution link,
   assert.ok(!mdx.includes("full article"), "body must not reproduce full article content");
 });
 
+test("renderNewsMdx escapes line/paragraph separator and NEL instead of leaving them as literal line breaks inside the YAML scalar (regression)", () => {
+  // Built from code points, not \u escapes, so the literal separator
+  // characters actually land in the test's input string (that's the
+  // point — simulating a scraped headline that carries one of these in).
+  const lineSeparator = String.fromCodePoint(8232);
+  const paragraphSeparator = String.fromCodePoint(8233);
+  const nextLine = String.fromCodePoint(133);
+  const frontmatter: NewsFrontmatter = {
+    title: `Title with a${lineSeparator}line separator and${paragraphSeparator}paragraph separator and${nextLine}next line`,
+    description: "desc",
+    date: "2026-10-26",
+    category: "Industry",
+    draft: false,
+  };
+  const mdx = renderNewsMdx(frontmatter, "summary", "https://example.com/article");
+  const titleLine = mdx.split("\n")[1];
+  assert.match(titleLine, /^title: "/);
+  assert.ok(!titleLine.includes(lineSeparator));
+  assert.ok(!titleLine.includes(paragraphSeparator));
+  assert.ok(!titleLine.includes(nextLine));
+  assert.match(titleLine, /\\u2028/);
+  assert.match(titleLine, /\\u2029/);
+  assert.match(titleLine, /\\u0085/);
+  // the frontmatter block must still close after exactly 5 fields (title
+  // didn't split into extra "lines" because of an unescaped separator)
+  assert.equal(mdx.split("\n").slice(0, 7)[6], "---");
+});
+
 test("renderEventMdx includes every field CLAUDE.md's events schema requires", () => {
   const frontmatter: EventFrontmatter = {
     title: "Community Meetup",
