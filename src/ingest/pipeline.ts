@@ -12,6 +12,7 @@ import type { IngestResult } from "./types.js";
 export async function ingestSource(source: Source): Promise<IngestResult> {
   try {
     const items = await fetchItemsForSource(source);
+    const collection = source.buildStep === 6 ? "events" : "news";
     let queued = 0;
     for (const item of items) {
       const id = itemId(item.guid || item.url);
@@ -22,7 +23,7 @@ export async function ingestSource(source: Source): Promise<IngestResult> {
         sourceId: item.sourceId,
         url: item.url,
         title: item.title,
-        collection: "news",
+        collection,
         payload: item,
       });
       queued += 1;

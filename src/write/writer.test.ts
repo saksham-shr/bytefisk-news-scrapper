@@ -79,6 +79,47 @@ test("writePendingItems writes an events MDX file with CLAUDE.md's required fiel
   cleanup();
 });
 
+test("writePendingItems uses an events ingester's own type/format/location/duration/registerUrl instead of the defaults when the payload provides them", () => {
+  const { repoDir, cleanup } = useFreshDbAndRepo();
+
+  const id = itemId("https://luma.com/example-hackathon");
+  markSeen({ id, sourceId: "luma-community-meetups", url: "https://luma.com/example-hackathon", title: "x" });
+  enqueuePending({
+    id,
+    sourceId: "luma-community-meetups",
+    url: "https://luma.com/example-hackathon",
+    title: "Bengaluru Weekend Hackathon",
+    collection: "events",
+    payload: {
+      sourceId: "luma-community-meetups",
+      url: "https://luma.com/example-hackathon",
+      guid: "https://luma.com/example-hackathon",
+      title: "Bengaluru Weekend Hackathon",
+      summary: "A 24-hour hackathon.",
+      publishedAt: "2026-11-01T18:00:00Z",
+      type: "Hackathon",
+      format: "In-Person",
+      location: "WeWork Koramangala, Bengaluru",
+      duration: "1 day",
+      registerUrl: "https://luma.com/register/example-hackathon",
+    },
+  });
+
+  const results = writePendingItems("events");
+  assert.equal(results.length, 1);
+  assert.ok(results[0].path);
+
+  const contents = readFileSync(results[0].path!, "utf8");
+  assert.match(contents, /type: "Hackathon"/);
+  assert.match(contents, /format: "In-Person"/);
+  assert.match(contents, /location: "WeWork Koramangala, Bengaluru"/);
+  assert.match(contents, /duration: "1 day"/);
+  assert.match(contents, /registerUrl: "https:\/\/luma\.com\/register\/example-hackathon"/);
+  assert.ok(results[0].path!.startsWith(join(repoDir, "src", "content", "events")));
+
+  cleanup();
+});
+
 test("writePendingItems marks a row failed (not pending forever) when its payload is malformed, and keeps going", () => {
   const { cleanup } = useFreshDbAndRepo();
 

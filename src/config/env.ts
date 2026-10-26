@@ -10,6 +10,10 @@ export interface EnvConfig {
   telegramApiBaseUrl: string;
   githubToken: string | null;
   semanticScholarApiKey: string | null;
+  /** Overridable only for tests (points a local mock server instead of the real site). */
+  lumaCalendarUrl: string;
+  /** Overridable only for tests (points a local mock server instead of the real site). */
+  punetechSubscribePageUrl: string;
 }
 
 function resolveFromCwd(value: string): string {
@@ -48,5 +52,14 @@ export const env: EnvConfig = {
   },
   get semanticScholarApiKey() {
     return process.env.SEMANTIC_SCHOLAR_API_KEY || null;
+  },
+  get lumaCalendarUrl() {
+    return process.env.LUMA_CALENDAR_URL || "https://luma.com/CommunityMeetups";
+  },
+  get punetechSubscribePageUrl() {
+    return (
+      process.env.PUNETECH_SUBSCRIBE_PAGE_URL ||
+      "https://punetech.com/dont-miss-tech-events-subscribe-to-the-punetech-calendar/"
+    );
   },
 };
