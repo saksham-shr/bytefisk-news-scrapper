@@ -6,6 +6,8 @@ export interface EnvConfig {
   bytefiskRepoPath: string;
   telegramBotToken: string | null;
   telegramChatId: string | null;
+  /** Overridable only for tests (points a local mock server instead of the real API). */
+  telegramApiBaseUrl: string;
   githubToken: string | null;
   semanticScholarApiKey: string | null;
 }
@@ -37,6 +39,9 @@ export const env: EnvConfig = {
   },
   get telegramChatId() {
     return process.env.TELEGRAM_CHAT_ID || null;
+  },
+  get telegramApiBaseUrl() {
+    return process.env.TELEGRAM_API_BASE_URL || "https://api.telegram.org";
   },
   get githubToken() {
     return process.env.GITHUB_TOKEN || null;

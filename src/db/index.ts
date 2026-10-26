@@ -80,17 +80,27 @@ export interface PendingQueueRow {
   updated_at: string;
 }
 
-/** Pending items for a collection (or every collection), oldest first. */
-export function getPendingItems(collection?: "news" | "events"): PendingQueueRow[] {
+export type PendingStatus = PendingQueueRow["status"];
+
+/** Items in a given status (optionally scoped to one collection), oldest first. */
+export function getItemsByStatus(
+  status: PendingStatus,
+  collection?: "news" | "events",
+): PendingQueueRow[] {
   const db = getDb();
   if (collection) {
     return db
-      .prepare("SELECT * FROM pending_queue WHERE status = 'pending' AND collection = ? ORDER BY created_at ASC")
-      .all(collection) as PendingQueueRow[];
+      .prepare("SELECT * FROM pending_queue WHERE status = ? AND collection = ? ORDER BY created_at ASC")
+      .all(status, collection) as PendingQueueRow[];
   }
   return db
-    .prepare("SELECT * FROM pending_queue WHERE status = 'pending' ORDER BY created_at ASC")
-    .all() as PendingQueueRow[];
+    .prepare("SELECT * FROM pending_queue WHERE status = ? ORDER BY created_at ASC")
+    .all(status) as PendingQueueRow[];
+}
+
+/** Pending items for a collection (or every collection), oldest first. */
+export function getPendingItems(collection?: "news" | "events"): PendingQueueRow[] {
+  return getItemsByStatus("pending", collection);
 }
 
 export function updatePendingStatus(
