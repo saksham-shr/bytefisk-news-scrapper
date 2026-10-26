@@ -1,0 +1,18 @@
+{
+  "data": [
+    {
+      "paperId": "abc123",
+      "title": "Coding Agents: A Survey",
+      "abstract": "Survey abstract text.",
+      "url": "https://www.semanticscholar.org/paper/abc123",
+      "publicationDate": "2026-10-20"
+    },
+    {
+      "paperId": "def456",
+      "title": null,
+      "abstract": "Should be filtered out, no title.",
+      "url": null,
+      "publicationDate": null
+    }
+  ]
+}

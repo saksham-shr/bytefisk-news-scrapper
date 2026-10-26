@@ -8,7 +8,10 @@
     "dev": "tsx src/index.ts",
     "build": "tsc && mkdir -p dist/db && cp src/db/schema.sql dist/db/schema.sql",
     "start": "node dist/index.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test src/**/*.test.ts",
+    "poll:news:once": "tsx src/cli/poll-news-once.ts",
+    "poll:news": "tsx src/cli/poll-news.ts"
   },
   "repository": {
     "type": "git",
@@ -26,7 +29,8 @@
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",
-    "dotenv": "^18.0.9"
+    "dotenv": "^18.0.9",
+    "rss-parser": "^3.13.0"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^9.6.0",
