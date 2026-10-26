@@ -35,6 +35,8 @@ export function parseSemanticScholarResponse(
     });
 }
 
+const FETCH_TIMEOUT_MS = 15_000;
+
 export async function fetchSemanticScholar(
   sourceId: string,
   query: string = DEFAULT_QUERY,
@@ -45,6 +47,7 @@ export async function fetchSemanticScholar(
     "&fields=title,abstract,year,publicationDate,url";
   const res = await fetch(url, {
     headers: env.semanticScholarApiKey ? { "x-api-key": env.semanticScholarApiKey } : {},
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
   });
   if (!res.ok) {
     throw new Error(`${sourceId}: GET ${url} -> HTTP ${res.status}`);
