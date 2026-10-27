@@ -21,6 +21,29 @@ test("renderNewsMdx produces valid frontmatter and a summary + attribution link,
   assert.ok(!mdx.includes("full article"), "body must not reproduce full article content");
 });
 
+test("renderNewsMdx truncates an extremely long summary instead of reproducing the full article (regression)", () => {
+  // Real-world trigger: GitHub's releases.atom puts the *entire*
+  // changelog in its content field — this simulates that shape.
+  const fullChangelog = Array.from({ length: 50 }, (_, i) => `[commit${i}] - some change (author) #${1000 + i}`).join(
+    "\n",
+  );
+  const frontmatter: NewsFrontmatter = {
+    title: "Version 1.2.3",
+    description: "desc",
+    date: "2026-10-26",
+    category: "Open Source",
+    draft: false,
+  };
+  const mdx = renderNewsMdx(frontmatter, fullChangelog, "https://github.com/example/repo/releases/tag/v1.2.3");
+
+  assert.ok(fullChangelog.length > 600, "fixture must actually exceed the cap to exercise truncation");
+  const body = mdx.split("---\n")[2]; // after the two frontmatter "---" delimiters
+  assert.ok(body.length < fullChangelog.length, "body must be shorter than the full changelog");
+  assert.ok(body.length < 700, `expected a capped body, got ${body.length} chars`);
+  assert.ok(!mdx.includes("commit49"), "the tail of a long changelog must not survive truncation");
+  assert.match(mdx, /…/, "a truncated summary should be marked with an ellipsis");
+});
+
 test("renderNewsMdx escapes line/paragraph separator and NEL instead of leaving them as literal line breaks inside the YAML scalar (regression)", () => {
   // Built from code points, not \u escapes, so the literal separator
   // characters actually land in the test's input string (that's the

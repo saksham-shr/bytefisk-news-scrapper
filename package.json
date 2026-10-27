@@ -10,12 +10,10 @@
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
     "test": "node scripts/run-tests.mjs",
+    "check": "node --import tsx scripts/sanity-check.mjs",
     "poll:news:once": "tsx src/cli/poll-news-once.ts",
-    "poll:news": "tsx src/cli/poll-news.ts",
     "poll:scrape:once": "tsx src/cli/poll-scrape-once.ts",
-    "poll:scrape": "tsx src/cli/poll-scrape.ts",
     "poll:events:once": "tsx src/cli/poll-events-once.ts",
-    "poll:events": "tsx src/cli/poll-events.ts",
     "write:mdx": "tsx src/cli/write-mdx-once.ts",
     "notify": "tsx src/cli/notify-once.ts"
   },
@@ -37,6 +35,7 @@
     "better-sqlite3": "^13.0.3",
     "cheerio": "^1.2.0",
     "dotenv": "^18.0.9",
+    "node-ical": "^0.27.3",
     "rss-parser": "^3.13.0"
   },
   "devDependencies": {

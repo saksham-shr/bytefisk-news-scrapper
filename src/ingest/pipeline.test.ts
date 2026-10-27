@@ -31,6 +31,35 @@ test("ingestSource reports errors instead of throwing (fail loud, don't crash th
   cleanup();
 });
 
+test("ingestSource skips a source whose pollMinutes hasn't elapsed since its last poll, even across errors", async () => {
+  const { cleanup } = useFreshDb("bytefisk-pipeline-due-test-");
+
+  const brokenSource: Source = {
+    id: "unsupported-test-source",
+    name: "Unsupported",
+    mapSection: "0",
+    type: "api",
+    url: "https://example.com/does-not-matter",
+    auth: "open",
+    cadence: "Poll 15 min",
+    pollMinutes: 15,
+    buildStep: 2,
+    status: "active",
+  };
+
+  const first = await ingestSource(brokenSource);
+  assert.ok(first.error, "first call should attempt the fetch and hit the normal 'no ingester' error");
+  assert.equal(first.skipped, undefined);
+
+  const second = await ingestSource(brokenSource);
+  assert.equal(second.skipped, true, "second call within pollMinutes must be skipped, not re-attempted");
+  assert.equal(second.error, undefined);
+  assert.equal(second.fetched, 0);
+  assert.equal(second.queued, 0);
+
+  cleanup();
+});
+
 test("ingestSource enqueues a buildStep-6 (events) source's items under collection 'events', not 'news' (regression)", async () => {
   const { cleanup } = useFreshDb("bytefisk-pipeline-events-test-");
 

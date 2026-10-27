@@ -115,6 +115,25 @@ export function updatePendingStatus(
     .run(status, error ?? null, id);
 }
 
+/** ISO timestamp of the last time this source was polled, or null if never. */
+export function getLastPolledAt(sourceId: string): string | null {
+  const row = getDb()
+    .prepare("SELECT last_polled_at FROM source_poll_state WHERE source_id = ?")
+    .get(sourceId) as { last_polled_at: string } | undefined;
+  return row?.last_polled_at ?? null;
+}
+
+/** Records "we polled this source now" — see pipeline.ts's isDueForPoll. */
+export function recordPolled(sourceId: string): void {
+  getDb()
+    .prepare(
+      `INSERT INTO source_poll_state (source_id, last_polled_at)
+       VALUES (?, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+       ON CONFLICT(source_id) DO UPDATE SET last_polled_at = excluded.last_polled_at`,
+    )
+    .run(sourceId);
+}
+
 export function closeDb(): void {
   db?.close();
   db = null;
