@@ -30,7 +30,7 @@ function buildNewsMdx(row: PendingQueueRow, item: RawItem): string {
     title: item.title || row.title || row.url,
     description: (item.summary || item.title || "").slice(0, 280),
     date: isoDateOnly(item.publishedAt),
-    category: classifyCategory(item.sourceId, item.title, item.summary),
+    category: classifyCategory(item.sourceId),
     draft: false,
   };
   return renderNewsMdx(frontmatter, item.summary, item.url);

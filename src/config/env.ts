@@ -14,6 +14,9 @@ export interface EnvConfig {
   lumaCalendarUrl: string;
   /** Overridable only for tests (points a local mock server instead of the real site). */
   punetechSubscribePageUrl: string;
+  /** Step 7 (funding ingestion) is only built if one of these is actually provisioned. */
+  tracxnApiKey: string | null;
+  crunchbaseApiKey: string | null;
 }
 
 function resolveFromCwd(value: string): string {
@@ -61,5 +64,11 @@ export const env: EnvConfig = {
       process.env.PUNETECH_SUBSCRIBE_PAGE_URL ||
       "https://punetech.com/dont-miss-tech-events-subscribe-to-the-punetech-calendar/"
     );
+  },
+  get tracxnApiKey() {
+    return process.env.TRACXN_API_KEY || null;
+  },
+  get crunchbaseApiKey() {
+    return process.env.CRUNCHBASE_API_KEY || null;
   },
 };

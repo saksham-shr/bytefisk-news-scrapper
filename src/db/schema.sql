@@ -26,3 +26,15 @@ CREATE TABLE IF NOT EXISTS pending_queue (
 );
 
 CREATE INDEX IF NOT EXISTS idx_pending_queue_status ON pending_queue (status);
+
+-- When each source was last polled, so one frequent outer cron entry can
+-- drive every source without violating a slower/"be courteous" source's
+-- own documented cadence (TECH_NEWS_SOURCE_MAP.md's per-source notes,
+-- e.g. arXiv's "don't high-frequency poll a daily corpus") — see
+-- src/ingest/pipeline.ts's isDueForPoll. Not a scheduler: nothing reads
+-- this on a timer, it's only consulted the next time this source is
+-- considered for a poll.
+CREATE TABLE IF NOT EXISTS source_poll_state (
+  source_id TEXT PRIMARY KEY,
+  last_polled_at TEXT NOT NULL
+);

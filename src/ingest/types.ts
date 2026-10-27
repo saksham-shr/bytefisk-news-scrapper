@@ -14,4 +14,6 @@ export interface IngestResult {
   fetched: number;
   queued: number;
   error?: string;
+  /** True when the source's own cadence hasn't elapsed yet — not fetched this run. */
+  skipped?: boolean;
 }

@@ -32,9 +32,29 @@ function frontmatterBlock(fields: Array<[string, string]>): string {
   return `---\n${lines.join("\n")}\n---\n`;
 }
 
+/**
+ * Hard cap on how much of a feed's own summary/content field can land
+ * in the body. CLAUDE.md requires "short summary + attribution link, no
+ * full-article reproduction" — but some feeds (GitHub's releases.atom
+ * in particular) put their *entire* content in the field every scraper
+ * here treats as "summary", with no per-source length limit of their
+ * own. Capping it here, once, enforces the constraint regardless of how
+ * long any given source's raw field actually is.
+ */
+const MAX_BODY_SUMMARY_LENGTH = 600;
+
+function truncateSummary(summary: string): string {
+  const trimmed = summary.trim();
+  if (trimmed.length <= MAX_BODY_SUMMARY_LENGTH) return trimmed;
+  const cut = trimmed.slice(0, MAX_BODY_SUMMARY_LENGTH);
+  const lastSpace = cut.lastIndexOf(" ");
+  const base = lastSpace > 0 ? cut.slice(0, lastSpace) : cut;
+  return `${base}…`;
+}
+
 /** Body = short summary + source attribution link, never the full article. */
 function bodyWithAttribution(summary: string, sourceUrl: string): string {
-  const paragraph = summary.trim() || "No summary was provided by the source feed.";
+  const paragraph = truncateSummary(summary) || "No summary was provided by the source feed.";
   return `${paragraph}\n\n[Read more at the source](${sourceUrl})\n`;
 }
 

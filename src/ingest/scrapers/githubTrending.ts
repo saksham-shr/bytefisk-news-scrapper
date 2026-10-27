@@ -5,23 +5,32 @@ const TRENDING_URL = "https://github.com/trending?since=daily";
 const FETCH_TIMEOUT_MS = 15_000;
 
 /**
- * Version-locked against github.com/trending's markup as researched
- * 2026-10-26 (TECH_NEWS_SOURCE_MAP.md §4): each trending repo is an
- * `article.Box-row` with its `owner/repo` link in `h2 a[href]` and an
- * optional description in the first `p`. GitHub has no official endpoint
- * for this page — if this selector stops matching anything, that's page
- * drift, not an empty trending list, so we throw instead of returning [].
+ * Version-locked selectors against github.com/trending's markup.
+ * Checked: 2026-10-26 (TECH_NEWS_SOURCE_MAP.md §4). GitHub has no
+ * official endpoint for this page, so these are the only thing standing
+ * between this source and a silent outage — if parseGithubTrendingHtml
+ * starts throwing "0 repos parsed", the page's structure changed and
+ * these need updating, not the other way around.
  */
+const SELECTORS = {
+  /** Each trending repo is one of these. */
+  repoRow: "article.Box-row",
+  /** The owner/repo link, relative to a repoRow element. */
+  repoLink: "h2 a",
+  /** The repo's one-line description, relative to a repoRow element. */
+  description: "p",
+} as const;
+
 export function parseGithubTrendingHtml(html: string, sourceId: string): RawItem[] {
   const $ = cheerio.load(html);
   const items: RawItem[] = [];
 
-  $("article.Box-row").each((_, el) => {
-    const href = $(el).find("h2 a").attr("href");
+  $(SELECTORS.repoRow).each((_, el) => {
+    const href = $(el).find(SELECTORS.repoLink).attr("href");
     if (!href) return;
     const repoPath = href.trim().replace(/^\//, "");
     const url = `https://github.com/${repoPath}`;
-    const description = $(el).find("p").first().text().trim();
+    const description = $(el).find(SELECTORS.description).first().text().trim();
 
     items.push({
       sourceId,
@@ -35,7 +44,7 @@ export function parseGithubTrendingHtml(html: string, sourceId: string): RawItem
 
   if (items.length === 0) {
     throw new Error(
-      `${sourceId}: parsed 0 repos from github.com/trending — selectors likely drifted (expected article.Box-row > h2 a), update parseGithubTrendingHtml`,
+      `${sourceId}: parsed 0 repos from github.com/trending — selectors likely drifted (expected ${SELECTORS.repoRow} > ${SELECTORS.repoLink}), update the SELECTORS block in parseGithubTrendingHtml`,
     );
   }
   return items;

@@ -13,6 +13,12 @@ const USER_AGENT = "bytefisk-news-scrapper/0.1 (+https://github.com/saksham-shr/
  * issue #1. Items come back as plain RawItems (no event-specific
  * type/format/location/etc.) — writer.ts already falls back to
  * CLAUDE.md's stated defaults for whatever a payload doesn't carry.
+ *
+ * TODO: same caveat as luma.ts — this session's sandbox has no
+ * outbound network access to punetech.com, so discoverLinkUrl's
+ * patterns below are researched, not confirmed against a live fetch.
+ * If the first real run logs "could not find a RSS feed link", inspect
+ * the actual subscribe page and update the patterns.
  */
 export async function fetchPunetechEvents(sourceId: string): Promise<RawItem[]> {
   const subscribePageUrl = env.punetechSubscribePageUrl;

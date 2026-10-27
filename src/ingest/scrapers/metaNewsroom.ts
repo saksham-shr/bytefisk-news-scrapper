@@ -5,25 +5,33 @@ const NEWSROOM_URL = "https://about.fb.com/news/";
 const FETCH_TIMEOUT_MS = 15_000;
 
 /**
- * Meta's newsroom has no official RSS (TECH_NEWS_SOURCE_MAP.md §7). Like
- * Anthropic's site this targets a structural pattern rather than specific
- * CSS classes: every article link is dated, e.g.
- * `https://about.fb.com/news/2026/10/some-headline/`. Version-locked as
- * of 2026-10-26 — throws rather than returning [] if nothing matches, so
- * selector drift is loud, not a silent empty poll.
+ * Version-locked selectors/patterns against about.fb.com/news's markup.
+ * Checked: 2026-10-26 (TECH_NEWS_SOURCE_MAP.md §7). Meta's newsroom has
+ * no official RSS, so this targets a structural pattern rather than
+ * specific CSS classes: every article link is dated, e.g.
+ * `https://about.fb.com/news/2026/10/some-headline/`. Throws rather
+ * than returning [] if nothing matches, so selector/pattern drift is
+ * loud, not a silent empty poll.
  */
-// Anchored at both ends and matched against the resolved URL's *pathname*
-// (not the raw href) so a tracking/redirect link whose query string merely
-// ends in something shaped like this can't sneak through, and relative vs.
-// absolute hrefs are treated identically.
-const ARTICLE_PATH_PATTERN = /^\/news\/20\d{2}\/\d{1,2}\/[^/]+\/?$/;
+const SELECTORS = {
+  /** Every link on the page is checked against articlePathPattern below. */
+  anyLink: "a[href]",
+  /**
+   * Anchored at both ends and matched against the resolved URL's
+   * *pathname* (not the raw href) so a tracking/redirect link whose
+   * query string merely ends in something shaped like this can't
+   * sneak through, and relative vs. absolute hrefs are treated
+   * identically.
+   */
+  articlePathPattern: /^\/news\/20\d{2}\/\d{1,2}\/[^/]+\/?$/,
+} as const;
 
 export function parseMetaNewsroomHtml(html: string, sourceId: string): RawItem[] {
   const $ = cheerio.load(html);
   const seen = new Set<string>();
   const items: RawItem[] = [];
 
-  $("a[href]").each((_, el) => {
+  $(SELECTORS.anyLink).each((_, el) => {
     const href = $(el).attr("href");
     if (!href) return;
 
@@ -33,7 +41,7 @@ export function parseMetaNewsroomHtml(html: string, sourceId: string): RawItem[]
     } catch {
       return;
     }
-    if (!ARTICLE_PATH_PATTERN.test(resolved.pathname)) return;
+    if (!SELECTORS.articlePathPattern.test(resolved.pathname)) return;
 
     const url = resolved.toString();
     if (seen.has(url)) return;
